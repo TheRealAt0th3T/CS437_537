@@ -6,6 +6,8 @@
 # AUTHORS: Amara Tariq, Steven Kim, Alejandro Macias
 #
 # **************************************************************
+import textProcessor as tp  # importing the textProcessor.py to call its methods
+
 
 # Function to manage query suggestion by the user after the first
 # query has been typed by the user
@@ -29,19 +31,23 @@ if __name__ == "__main__":
 
     # The message will print asking the user
     # to enter their query to be searched
-    print("Please type your query and press the \'enter\' key.")
+    # **print("Please type your query and press the \'enter\' key.")
 
     # Gathering the contents entered by the user and
     # casting the input as type string
-    userQueryInput = str(input())
+    # **userQueryInput = str(input())
 
     # Now we ask the user to select a query suggestion option
     # by typing 1, 2, 3, 4, or 5
-    print("Please select a query option by typing \'1\' or \'2\' or \'3\' or \'4\' or \'5\'")
+    # **print("Please select a query option by typing \'1\' or \'2\' or \'3\' or \'4\' or \'5\'")
 
     # Gathering the option selected by the user and
     # casting the input as type int
-    userSelectionOption = int(input())
+    # **userSelectionOption = int(input())
 
     # the user option is processed and will return what is associated with the option selected.
-    print(option_manager(userSelectionOption))
+    # **print(option_manager(userSelectionOption))
+
+    # Used for testing purposes. Once testing is finished with this method, comment it and uncomment the previous
+    # lines that are commented with the **
+    tp.print_result()
