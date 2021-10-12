@@ -32,7 +32,7 @@ testing_str = ""
 # This function is used for testing to print the output of the string. It is called in mainDrive.py.
 # It is used to see if we are processing the string correctly.
 def print_result():
-    return print(new_final_str2)
+    return print(new_final_str)
 
 
 # csvFile contains the contents of the file. This path may be different for
@@ -74,7 +74,7 @@ def stem_tokens(str_to_be_stemmed):
     return stemmed_str
 
 
-# This function will create an inverted index***********needs to be fixed
+# This function will create an inverted index  ***********needs to be fixed
 def create_inverted_index(str_to_be_inverted):
     inverted_dict = {}
     inverted_list = []
@@ -89,16 +89,16 @@ def create_inverted_index(str_to_be_inverted):
 
 
 # testing lower case method
-testing_str = lower_case_str(s_test)
+testing_strlowercase = lower_case_str(s_test)
 
 # testing remove punctuation
-testing_str = remove_punc(testing_str)
+testing_removed_punc = remove_punc(testing_strlowercase)
 
 # testing removal of stop words
-new_final_str = filter_tokens(testing_str)
+testing_removed_stopwords = filter_tokens(testing_removed_punc)
 
 # testing stemming the tokens
-new_final_str = stem_tokens(new_final_str)
+new_final_str = stem_tokens(testing_removed_stopwords)
 
 # testing creating the index
-new_final_str2 = create_inverted_index(new_final_str)
+# new_final_str2 = create_inverted_index(new_final_str)

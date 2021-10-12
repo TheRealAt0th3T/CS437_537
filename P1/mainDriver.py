@@ -6,6 +6,7 @@
 # AUTHORS: Amara Tariq, Steven Kim, Alejandro Macias
 #
 # **************************************************************
+import customStopWordList
 import textProcessor as tp  # importing the textProcessor.py to call its methods
 
 
