@@ -10,6 +10,7 @@
 import pandas as pd
 import customStopWordList
 import nltk
+# nltk.download('punkt')
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
