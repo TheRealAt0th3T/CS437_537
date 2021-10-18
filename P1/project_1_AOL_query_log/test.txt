@@ -1,0 +1,6 @@
+AnonID	Query	QueryTime
+142	merit release appearance	2006-04-22 23:51:18
+217	lottery	2006-03-01 11:58:51
+217	lottery	2006-03-27 14:10:38
+217	vietnam	2006-05-22 17:43:42
+217	vietnam	2006-05-22 18:03:24

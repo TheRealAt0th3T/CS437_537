@@ -53,3 +53,12 @@ ql = ql.append(pd.read_table('project_1_AOL_query_log/Clean-Data-03.txt', sep='\
 ql = ql.append(pd.read_table('project_1_AOL_query_log/Clean-Data-04.txt', sep='\t'))
 ql = ql.append(pd.read_table('project_1_AOL_query_log/Clean-Data-05.txt', sep='\t'))
 print(ql)
+
+
+# wiki = pd.read_csv("project_1_Wiki_sample.csv", sep=',')
+# # sample = str(wiki['content'].loc[0])
+# # print(sample)
+
+# f = open(str(wiki['id'].loc[0]), "a")
+# f.write(wiki['content'].loc[0])
+# f.close()
