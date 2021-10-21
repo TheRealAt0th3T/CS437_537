@@ -6,49 +6,170 @@
 # AUTHORS: Amara Tariq, Steven Kim, Alejandro Macias
 #
 # **************************************************************
-import customStopWordList
-import textProcessor as tp  # importing the textProcessor.py to call its methods
-
+# import textProcessor as TP  # importing the textProcessor.py to call its methods
+import json
+import pandas as pd
+import time
+import os
+import warnings
+warnings.simplefilter("ignore")
+import textProcessor as TP
+import querySuggestion as QS
+import candidateResources_Ranking as CRR
+import snippets as SNP
 
 # This is our main "method" block that
 # initiates our code
-if __name__ == "__main__":
+ql_dict = []
+ql = pd.DataFrame()
+wiki_dict = []
+wiki = pd.DataFrame()
+wiki_original = pd.DataFrame()
+
+def readql():
+    global ql_dict, ql
+    start = time.time()
     with open('Computed/ql_dict_trueid.json') as json_file:
         ql_dict = json.load(json_file)
     ql = pd.read_csv('Computed/ql.csv')[['AnonID','session_id','Query','QueryTime','length']]
+    end = time.time()
+    print("Initialization complete. Time Elapsed: "+str(end - start)[0:4] + "s")
+def readwiki():
+    global wiki_dict, wiki
+    start = time.time()
     with open('Computed/wiki_dict.json') as json_file:
         wiki_dict = json.load(json_file)
     wiki = pd.read_csv('Computed/wiki_punc.csv')[['content','title','id','max_occur_words','max_occur_number']]
+    end = time.time()
+    print("Initialization complete. Time Elapsed: "+str(end - start)[0:4] + "s")
+def readAll():
+    global ql_dict, ql, wiki_dict, wiki, wiki_original
+    start = time.time()
+    with open('Computed/ql_dict_trueid.json') as json_file:
+        ql_dict = json.load(json_file)
+    print("ql_dict loaded")
+    ql = pd.read_csv('Computed/ql.csv')[['AnonID','session_id','Query','QueryTime','length']]
+    print("ql loaded")
+    with open('Computed/wiki_dict.json') as json_file:
+        wiki_dict = json.load(json_file)
+    print("wiki_dict loaded")
+    wiki = pd.read_csv('Computed/wiki_punc.csv')[['content','title','id','max_occur_words','max_occur_number']]
+    print("wiki loaded")
+    wiki_original = pd.read_csv('Computed/wiki_original.csv')[['content','title','id']]
+    print("wiki_original loaded")
+    end = time.time()
+    print("Initialization complete. Time Elapsed: "+str(end - start)[0:4] + "s\n")
 
+def minusOne(array):
+    ret = []
+    for a in array:
+        ret.append(int(a)-1)
+    return ret
+def cleanQuery(query):
+    cleaned = TP.lower_case_str(query)
+    cleaned = TP.remove_punc(cleaned)
+    cleaned = TP.removeSpace(cleaned)
+    cleaned = TP.filter_tokens(cleaned)
+    cleaned = TP.stem_tokens(cleaned)
+    cleaned = cleaned.strip()
+
+    return cleaned
+
+def main():
+    # start = time.time()
+    # with open('Computed/ql_dict_trueid.json') as json_file:
+    #     ql_dict = json.load(json_file)
+    # ql = pd.read_csv('Computed/ql.csv')[['AnonID','session_id','Query','QueryTime','length']]
+    # with open('Computed/wiki_dict.json') as json_file:
+    #     wiki_dict = json.load(json_file)
+    # wiki = pd.read_csv('Computed/wiki_punc.csv')[['content','title','id','max_occur_words','max_occur_number']]
+    print("Do you wanna build a Search Engine~?")
+    QS.set(ql, ql_dict)
+    CRR.set(wiki, wiki_dict)
+    SNP.set(wiki, wiki_dict)
+
+    
     # The message will print asking the user
     # to enter their query to be searched
-    print("Please type your query and press the \'enter\' key.")
+    # print("Please type your query and press the \'enter\' key.")
 
     # Gathering the contents entered by the user and
     # casting the input as type string
-    userQueryInput = str(input())
+    # userQueryInput = str(input())
 
-    print("What would you like to do with your query " + userQueryInput + "?")
-    print("1) Suggested Queries \n2) Candidate Resources \n3) Relevance Ranking \n4) Generate Snippets")
-    s = int(input())
+    # print("What would you like to do with your query " + userQueryInput + "?")
+    s = 0
+    while(s != 4):
+        print("Please select a task using numbers [1,2,3,4]:")
+        print("\t1) Suggested Queries \n\t2) Candidate Resources/Relevance Ranking \n\t3) Generate Snippets \n\t4) Exit")
+        s = int(input())
+        if s != 4:
+            print("Please type your Query:")
+            Uinput = input()
+            Uinput = cleanQuery(Uinput)
 
-    if s == 1:
-        print("Suggested Queries has been selected.")
-        # function call
-    elif s == 2:
-        print("Candidate Resources has been selected")
-        # function call
-    elif s == 3:
-        print("Relevance Ranking has been selected")
-        # function call
-    elif s == 4:
-        print("Generate Snippets")
-        # function call
-    else:
-        print("Invalid option selected please try again.")
+        if s == 1:
+            print("--------------------------------------------------------------------------------------------------")
+            print("Suggested Queries for: \"" + Uinput + "\"")
+            result = QS.getScores(Uinput)
+            for q in result['Query'].iloc[0:9].tolist():
+                print("\t" + str(q))
+            print("--------------------------------------------------------------------------------------------------")
+            # function call
+        elif s == 2:
+            print("--------------------------------------------------------------------------------------------------")
+            print("Calculating Candidate Resources/Relevance Ranking for: \"" + Uinput + "\"")
+            result = CRR.getRelevantResources(Uinput)
+            print(result[['title','Total']])
+            print("--------------------------------------------------------------------------------------------------")
+            print("\n")
+            # function call
+        elif s == 3:
+            print("--------------------------------------------------------------------------------------------------")
+            print("Generating Snippets for: \"" + Uinput + "\"")
+            result = SNP.getSnippets(Uinput, CRR.getRelevantResources(Uinput))
+            # print(result)
+            
+            firstSentence = []
+            secondSentence = []
+            sentences = []
+            # print(wiki_original['content'].iloc[result['id']].tolist())
+            for s in wiki_original['content'].iloc[minusOne(result['id'])].tolist():
+                sentences.append(SNP.getSentences(s))
+            for i in range(len(result)):
+                # print(sentences[i])
+                # print([result['firstSentenceID'].iloc[i]])
+                firstSentence.append(sentences[i][result['firstSentenceID'].iloc[i]])
+                if result['secondSentenceID'].iloc[i] != -1:
+                    secondSentence.append(str(sentences[i][result['secondSentenceID'].iloc[i]]))
+                else:
+                    secondSentence.append("")
+            # Show = pd.DataFrame(result['title'].tolist(),columns=['title'])
+            # Show['snippet'] = firstSentence
+            # print(Show)
+            titles = result['title'].tolist()
+            for i in range(len(titles)):
+                print("--------------------------------------------------------------------------------------------------")
+                print("\t"+str(titles[i]) + "\n")
+                print(firstSentence[i])
+                print("\n")
+                print(secondSentence[i])
+            print("--------------------------------------------------------------------------------------------------")
 
+            print("\n")
+            # function call
+        elif s == 4:
+            print("Okay, Bye...")
+            file = "Okay_bye.mp3"
+            os.system("afplay " + file)
+        else:
+            print("Invalid option selected please try again.")
 
-
+print('Booting the program ...')
+readAll()
+# readwiki()
+# readql()
+main()
 
 
     # WE CAN JUST REMOVE THE COMMENTS BELOW ONCE EVERYTHING IS WORKING

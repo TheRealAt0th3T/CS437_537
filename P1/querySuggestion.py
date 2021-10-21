@@ -1,64 +1,109 @@
 # **************************************************************
 #
-# This is the text processor python file which will process the text in the
-# csv file, utilize stop words, stem.
+# Query Suggestion
 #
 # AUTHORS: Amara Tariq, Steven Kim, Alejandro Macias
 #
 # **************************************************************
-import os
-# current_path = os.getcwd()
-# print(current_path)
-os.chdir("/Users/steven/Desktop/CS437_537/P1")
+
 import pandas as pd
-import customStopWordList
-import nltk
 import re, string
+import time
+import json
 
-# nltk.download('punkt')
-# nltk.download('stopwords')  # divides a text into a list of sentences to build abbreviations words, collocations,
-# and words that start sentences.
-# nltk.download('wordnet')  # used to find the meanings of words, synonyms, antonym, and more...
-
-
-# Sentence string to test logic before using large csv file
-s_test = 'Old-school musical numbers, feisty princesses, funny sidekicks and a mix of action, comedy and ' \
-         'romance come together in Frozen, a Disney animation that works hard to keep everyone happy. '
-
-# testing string outputs
-testing_str = ""
-
-# csvFile contains the contents of the file. This path may be different for
-# each of us. Either way, it should be in the format of pd.read_csv("filename/path")
-def get_csv_file_content():
-    csv_file = pd.read_csv("C:/Users/Ale_Mac5/PycharmProjects/CS437_537/project_1_Wiki_sample.csv")
-    return csv_file
-
-
-# This function will lower case capitalization in the string and will return
-# a string that is all lower case
-def lower_case_str(string_to_be_lower_cased):
-    lowercase_str_result = string_to_be_lower_cased.lower()
-    return lowercase_str_result
-
-# testing lower case method
-testing_strlowercase = lower_case_str(s_test)
-
-# reading query logs
-ql = pd.read_table('project_1_AOL_query_log/Clean-Data-01.txt', sep='\t')
-
+# SESSION ID
+# Opening .json
+# with open('Computed/ql.json') as json_file:
+#     ql_dict = json.load(json_file)
+# ql = pd.read_csv('Computed/ql.csv')[['AnonID', 'Query', 'QueryTime']]
 # print(ql)
-ql = ql.append(pd.read_table('project_1_AOL_query_log/Clean-Data-02.txt', sep='\t'))
-ql = ql.append(pd.read_table('project_1_AOL_query_log/Clean-Data-03.txt', sep='\t'))
-ql = ql.append(pd.read_table('project_1_AOL_query_log/Clean-Data-04.txt', sep='\t'))
-ql = ql.append(pd.read_table('project_1_AOL_query_log/Clean-Data-05.txt', sep='\t'))
-print(ql)
+
+# num = 0
+# prev_id = 0
+
+# SessionID Function -
+# def sessionID(id):
+#     global num, prev_id
+#     if prev_id != int(id):
+#         num = num + 1
+#         prev_id = int(id)
+
+#     return num
+
+# ql['session_id'] = ql['AnonID'].apply(sessionID)
+# ql = ql[['AnonID','session_id','Query','QueryTime']]
+# ql.to_csv('ql.csv')
 
 
-# wiki = pd.read_csv("project_1_Wiki_sample.csv", sep=',')
-# # sample = str(wiki['content'].loc[0])
-# # print(sample)
 
-# f = open(str(wiki['id'].loc[0]), "a")
-# f.write(wiki['content'].loc[0])
-# f.close()
+# QUERY LENGTH
+# ql = pd.read_csv('Computed/ql.csv')[['AnonID','session_id','Query','QueryTime']]
+# print(ql)
+
+# def queryLength(query):
+#     ret = query.split(" ")
+#     while "" in ret:
+#         ret.remove("")
+#     return len(ret)
+
+
+# ql['length'] = ql['Query'].apply(queryLength)
+# ql = ql[['AnonID','session_id','Query','QueryTime','length']]
+# ql.to_csv('ql.csv')
+
+
+
+# QUERY SUGGESTION
+# with open('Computed/wiki.json') as json_file:
+#     wiki_dict = json.load(json_file)
+# wiki = pd.read_csv('Computed/wiki.csv')[['content','title','id']]
+# print(wiki)
+# start = time.time()
+
+# with open('Computed/ql_dict_trueid.json') as json_file:
+#     ql_dict = json.load(json_file)
+# ql = pd.read_csv('Computed/ql.csv')[['AnonID','session_id','Query','QueryTime','length']]
+# print(ql)
+# end = time.time()
+# print(end - start)
+
+
+
+
+# GETROWS
+# print(wiki_dict['merit'])
+# print(wiki_dict['merit'].keys())
+# '940', '1167'
+ql_dict = []
+ql = pd.DataFrame()
+def set(dataframe, dict):
+    global ql_dict, ql
+    ql = dataframe
+    ql_dict = dict
+
+# Takes a word, returns all rows of dataframe that contain the word, that has a bigger length than num
+def getRows(word, num):
+    # print(ql_dict[str(word)].keys()) return ql[(ql['session_id'].astype('str').isin(list(ql_dict[str(word)].keys(
+    # )))) & (ql['length'].astype('int64') > num)]
+    return ql.iloc[list(ql_dict[str(word)].keys())][ql['length'].astype('int64') > num]
+
+# word = 'vietnam'  # THIS LINE NEEDS TO BE FIXED*********************
+# word = word.strip()
+
+
+# print(len(word.split(" ")))
+# print(getRows(word, len(word.split(" "))))
+# print(ql[ql['length'].astype('int64') > 2])
+
+def getScores(word):
+    Rows = getRows(word, len(word.split(" ")))
+    # print(Rows) # This prints all rows that contain the row
+    result = Rows[['session_id','Query','QueryTime']].groupby(["Query","session_id"]).count().rename(columns={"QueryTime":"Occurance_per_session_id"})
+    result = result.reset_index()
+    # print(result) # This prints count for a single session
+    result = result.groupby(by=['Query']).count()
+    result['Score'] = result['Occurance_per_session_id']/len(Rows.groupby(by=["session_id"]))
+    # # print(str(len(Count.groupby(by=["session_id"]))) + " individual sessions")
+    result = result.sort_values(by=["Score"], ascending=False)[['Occurance_per_session_id', 'Score']].reset_index()
+
+    return result
