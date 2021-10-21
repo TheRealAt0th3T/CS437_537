@@ -6,7 +6,7 @@
 # AUTHORS: Amara Tariq, Steven Kim, Alejandro Macias
 #
 # **************************************************************
-# import textProcessor as TP  # importing the textProcessor.py to call its methods
+# 
 import json
 import pandas as pd
 import time
@@ -48,7 +48,8 @@ def readAll():
     with open('Computed/ql_dict_trueid.json') as json_file:
         ql_dict = json.load(json_file)
     print("ql_dict loaded")
-    ql = pd.read_csv('Computed/ql.csv')[['AnonID','session_id','Query','QueryTime','length']]
+    ql = pd.read_csv('Computed/ql.csv')[['AnonID','session_id','Query','QueryTime','length', 'id']]
+    # ql_original = pd.read_csv('Computed/ql_original.csv')[['AnonID','Query']]
     print("ql loaded")
     with open('Computed/wiki_dict.json') as json_file:
         wiki_dict = json.load(json_file)
@@ -105,20 +106,20 @@ def main():
         s = int(input())
         if s != 4:
             print("Please type your Query:")
-            Uinput = input()
-            Uinput = cleanQuery(Uinput)
+            TrueInput = input()
+            Uinput = cleanQuery(TrueInput)
 
         if s == 1:
             print("--------------------------------------------------------------------------------------------------")
-            print("Suggested Queries for: \"" + Uinput + "\"")
-            result = QS.getScores(Uinput)
+            print("Suggested Queries for: \"" + TrueInput + "\"")
+            result = QS.filterScores(Uinput)
             for q in result['Query'].iloc[0:9].tolist():
                 print("\t" + str(q))
             print("--------------------------------------------------------------------------------------------------")
             # function call
         elif s == 2:
             print("--------------------------------------------------------------------------------------------------")
-            print("Calculating Candidate Resources/Relevance Ranking for: \"" + Uinput + "\"")
+            print("Calculating Candidate Resources/Relevance Ranking for: \"" + TrueInput + "\"")
             result = CRR.getRelevantResources(Uinput)
             print(result[['title','Total']])
             print("--------------------------------------------------------------------------------------------------")
@@ -126,7 +127,7 @@ def main():
             # function call
         elif s == 3:
             print("--------------------------------------------------------------------------------------------------")
-            print("Generating Snippets for: \"" + Uinput + "\"")
+            print("Generating Snippets for: \"" + TrueInput + "\"")
             result = SNP.getSnippets(Uinput, CRR.getRelevantResources(Uinput))
             # print(result)
             

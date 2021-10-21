@@ -95,15 +95,40 @@ def getRows(word, num):
 # print(getRows(word, len(word.split(" "))))
 # print(ql[ql['length'].astype('int64') > 2])
 
-def getScores(word):
-    Rows = getRows(word, len(word.split(" ")))
-    # print(Rows) # This prints all rows that contain the row
-    result = Rows[['session_id','Query','QueryTime']].groupby(["Query","session_id"]).count().rename(columns={"QueryTime":"Occurance_per_session_id"})
+
+def getScores(words):
+    result = pd.DataFrame()
+    first = True
+    numWords = len(words.split(" "))
+    for word in words.split(" "):
+        Rows = getRows(word, numWords) # n + 1
+#         print("Rows " + word)
+#         print(Rows) # This prints all rows that contain the row
+        if first:
+            result = Rows[['session_id','Query','QueryTime']]
+            first = False
+        else:
+            result.append(Rows[['session_id','Query','QueryTime']])
+    
+#     print(result)
+    result = result.groupby(["Query","session_id"]).count().rename(columns={"QueryTime":"Occurance_per_session_id"})
     result = result.reset_index()
     # print(result) # This prints count for a single session
-    result = result.groupby(by=['Query']).count()
+    result = result.groupby(by=['Query']).count().reset_index()
     result['Score'] = result['Occurance_per_session_id']/len(Rows.groupby(by=["session_id"]))
-    # # print(str(len(Count.groupby(by=["session_id"]))) + " individual sessions")
-    result = result.sort_values(by=["Score"], ascending=False)[['Occurance_per_session_id', 'Score']].reset_index()
-
+#     print(result)
+    
     return result
+
+def filterScores(words):
+    result = getScores(words)
+#     print(result)
+    for i in range(len(result)):
+        if result['Query'].iloc[i][0:len(words)] == words:
+            result['Score'].iloc[i] += 1
+    result = result.sort_values(by=["Score"], ascending=False)[['Query', 'Occurance_per_session_id', 'Score']].reset_index()
+    return result
+    # print(str(len(Count.groupby(by=["session_id"]))) + " individual sessions")
+
+# print(getScores("peru illinoi"))
+# print(filterScores("peru illinoi"))
