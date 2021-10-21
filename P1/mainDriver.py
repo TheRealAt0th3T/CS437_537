@@ -13,6 +13,12 @@ import textProcessor as tp  # importing the textProcessor.py to call its methods
 # This is our main "method" block that
 # initiates our code
 if __name__ == "__main__":
+    with open('Computed/ql_dict_trueid.json') as json_file:
+        ql_dict = json.load(json_file)
+    ql = pd.read_csv('Computed/ql.csv')[['AnonID','session_id','Query','QueryTime','length']]
+    with open('Computed/wiki_dict.json') as json_file:
+        wiki_dict = json.load(json_file)
+    wiki = pd.read_csv('Computed/wiki_punc.csv')[['content','title','id','max_occur_words','max_occur_number']]
 
     # The message will print asking the user
     # to enter their query to be searched
