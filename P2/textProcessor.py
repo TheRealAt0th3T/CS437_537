@@ -5,6 +5,7 @@ from nltk.stem.porter import PorterStemmer
 import re
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import wordnet
+import nltk
 
 def lower_case_str(string_to_be_lower_cased):
     lowercase_str_result = str(string_to_be_lower_cased).lower()

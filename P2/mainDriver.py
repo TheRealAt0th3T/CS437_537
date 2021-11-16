@@ -48,16 +48,16 @@ def readAll():
     with open('Computed/ql_dict_trueid.json') as json_file:
         ql_dict = json.load(json_file)
     print("ql_dict loaded")
-    ql = pd.read_csv('Computed/ql.csv')[['AnonID','session_id','Query','QueryTime','length', 'id']]
+    ql = pd.read_csv('Computed/ql_ultimate.csv')[['AnonID','session_id','Query',"Query_original",'QueryTime','length', 'id']]
     # ql_original = pd.read_csv('Computed/ql_original.csv')[['AnonID','Query']]
     print("ql loaded")
     with open('Computed/wiki_dict.json') as json_file:
         wiki_dict = json.load(json_file)
     print("wiki_dict loaded")
-    wiki = pd.read_csv('Computed/wiki_punc.csv')[['content','title','id','max_occur_words','max_occur_number']]
+    wiki = pd.read_csv('Computed/wiki_ultimate.csv')[['content','content_original','title','id','max_occur_words','max_occur_number']]
     print("wiki loaded")
-    wiki_original = pd.read_csv('Computed/wiki_original.csv')[['content','title','id']]
-    print("wiki_original loaded")
+    # wiki_original = pd.read_csv('Computed/wiki_original.csv')[['content','title','id']]
+    # print("wiki_original loaded")
     end = time.time()
     print("Initialization complete. Time Elapsed: "+str(end - start)[0:4] + "s\n")
 
@@ -124,6 +124,8 @@ def main():
             print(result[['title','Total']])
             print("--------------------------------------------------------------------------------------------------")
             print("\n")
+            print("Dataframe")
+            print(result)
             # function call
         elif s == 3:
             print("--------------------------------------------------------------------------------------------------")
