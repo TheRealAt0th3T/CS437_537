@@ -87,7 +87,7 @@ def minusOne(array):
 def getRows(qArray):
     keys = []
     for qWord in qArray.split(" "):
-        # print(qWord)
+#         print(qWord)
         keys += minusOne(list(wiki_dict[str(qWord)].keys()))
 #     print("before: " + str(keys))
     keys = list(dict.fromkeys(keys)) # remove duplicates
@@ -181,14 +181,13 @@ def queryWordTFIDF(query):
 
 def setCF(query):
     global CR
-    # print(query,"query")
     CR = containsIDWiki(query)
 
 def getRelevantResources(query):
     global CR
     setCF(query)
     queryWordTFIDF(query)
-    # sorted = CR.sort_values(by=["Total"], ascending=False)[['content_original', 'title', 'id', 'Total']]
+    # sorted = CR.sort_values(by=["Total"], ascending=False)[['content', 'title', 'id', 'Total']]
     # return sorted.head(50)
     return CR
 

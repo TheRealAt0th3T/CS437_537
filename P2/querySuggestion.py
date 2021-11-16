@@ -105,16 +105,16 @@ def getScores(words):
 #         print("Rows " + word)
 #         print(Rows) # This prints all rows that contain the row
         if first:
-            result = Rows[['session_id','Query','QueryTime']]
+            result = Rows[['session_id','Query_original','QueryTime']]
             first = False
         else:
-            result.append(Rows[['session_id','Query','QueryTime']])
+            result.append(Rows[['session_id','Query_original','QueryTime']])
     
 #     print(result)
-    result = result.groupby(["Query","session_id"]).count().rename(columns={"QueryTime":"Occurance_per_session_id"})
+    result = result.groupby(["Query_original","session_id"]).count().rename(columns={"QueryTime":"Occurance_per_session_id"})
     result = result.reset_index()
     # print(result) # This prints count for a single session
-    result = result.groupby(by=['Query']).count().reset_index()
+    result = result.groupby(by=['Query_original']).count().reset_index()
     result['Score'] = result['Occurance_per_session_id']/len(Rows.groupby(by=["session_id"]))
 #     print(result)
     
@@ -124,9 +124,9 @@ def filterScores(words):
     result = getScores(words)
 #     print(result)
     for i in range(len(result)):
-        if result['Query'].iloc[i][0:len(words)] == words:
+        if result['Query_original'].iloc[i][0:len(words)] == words:
             result['Score'].iloc[i] += 1
-    result = result.sort_values(by=["Score"], ascending=False)[['Query', 'Occurance_per_session_id', 'Score']].reset_index()
+    result = result.sort_values(by=["Score"], ascending=False)[['Query_original', 'Occurance_per_session_id', 'Score']].reset_index()
     return result
     # print(str(len(Count.groupby(by=["session_id"]))) + " individual sessions")
 

@@ -24,14 +24,16 @@ ql_dict = []
 ql = pd.DataFrame()
 wiki_dict = []
 wiki = pd.DataFrame()
-wiki_original = pd.DataFrame()
+# wiki_original = pd.DataFrame()
 
 def readql():
     global ql_dict, ql
     start = time.time()
     with open('Computed/ql_dict_trueid.json') as json_file:
         ql_dict = json.load(json_file)
-    ql = pd.read_csv('Computed/ql.csv')[['AnonID','session_id','Query','QueryTime','length']]
+    print("ql_dict loaded")
+    ql = pd.read_csv('Computed/ql_ultimate.csv')[['AnonID','session_id','Query',"Query_original",'QueryTime','length', 'id']]
+    print("ql loaded")
     end = time.time()
     print("Initialization complete. Time Elapsed: "+str(end - start)[0:4] + "s")
 def readwiki():
@@ -39,11 +41,13 @@ def readwiki():
     start = time.time()
     with open('Computed/wiki_dict.json') as json_file:
         wiki_dict = json.load(json_file)
-    wiki = pd.read_csv('Computed/wiki_punc.csv')[['content','title','id','max_occur_words','max_occur_number']]
+    print("wiki_dict loaded")
+    wiki = pd.read_csv('Computed/wiki_ultimate.csv')[['content','content_original','title','id','max_occur_words','max_occur_number']]
+    print("wiki loaded")
     end = time.time()
     print("Initialization complete. Time Elapsed: "+str(end - start)[0:4] + "s")
 def readAll():
-    global ql_dict, ql, wiki_dict, wiki, wiki_original
+    global ql_dict, ql, wiki_dict, wiki
     start = time.time()
     with open('Computed/ql_dict_trueid.json') as json_file:
         ql_dict = json.load(json_file)
@@ -60,7 +64,13 @@ def readAll():
     # print("wiki_original loaded")
     end = time.time()
     print("Initialization complete. Time Elapsed: "+str(end - start)[0:4] + "s\n")
-
+def readSample():
+    global wiki_dict, wiki
+    with open('Computed/wiki_dict_sample.json') as json_file:
+        wiki_dict = json.load(json_file)
+    print("wiki_dict loaded")
+    wiki = pd.read_csv('Computed/wiki_sample.csv')[['content','content_original','title','id','max_occur_words','max_occur_number']]
+    print("wiki loaded")
 def minusOne(array):
     ret = []
     for a in array:
@@ -70,7 +80,8 @@ def cleanQuery(query):
     cleaned = TP.lower_case_str(query)
     cleaned = TP.remove_punc(cleaned)
     cleaned = TP.removeSpace(cleaned)
-    cleaned = TP.filter_tokens(cleaned)
+    # cleaned = TP.filter_tokens(cleaned)
+    # Ex) if user types "one", it gets filtered.
     cleaned = TP.stem_tokens(cleaned)
     cleaned = cleaned.strip()
 
@@ -113,15 +124,15 @@ def main():
             print("--------------------------------------------------------------------------------------------------")
             print("Suggested Queries for: \"" + TrueInput + "\"")
             result = QS.filterScores(Uinput)
-            for q in result['Query'].iloc[0:9].tolist():
+            for q in result['Query_original'].iloc[0:9].tolist():
                 print("\t" + str(q))
             print("--------------------------------------------------------------------------------------------------")
             # function call
         elif s == 2:
             print("--------------------------------------------------------------------------------------------------")
             print("Calculating Candidate Resources/Relevance Ranking for: \"" + TrueInput + "\"")
-            result = CRR.getRelevantResources(Uinput)
-            print(result[['title','Total']])
+            result = CRR.getRelevantResources(Uinput).sort_values(by=["Total"], ascending=False)[['content_original', 'title', 'id', 'Total']]
+            print(result[['title','Total']].head(50))
             print("--------------------------------------------------------------------------------------------------")
             print("\n")
             print("Dataframe")
@@ -130,6 +141,7 @@ def main():
         elif s == 3:
             print("--------------------------------------------------------------------------------------------------")
             print("Generating Snippets for: \"" + TrueInput + "\"")
+            # print(Uinput)
             result = SNP.getSnippets(Uinput, CRR.getRelevantResources(Uinput))
             # print(result)
             
@@ -137,7 +149,7 @@ def main():
             secondSentence = []
             sentences = []
             # print(wiki_original['content'].iloc[result['id']].tolist())
-            for s in wiki_original['content'].iloc[minusOne(result['id'])].tolist():
+            for s in wiki['content_original'].iloc[minusOne(result['id'])].tolist():
                 sentences.append(SNP.getSentences(s))
             for i in range(len(result)):
                 # print(sentences[i])
@@ -169,9 +181,10 @@ def main():
             print("Invalid option selected please try again.")
 
 print('Booting the program ...')
-readAll()
+# readAll()
 # readwiki()
-# readql()
+readql()
+readSample()
 main()
 
 
