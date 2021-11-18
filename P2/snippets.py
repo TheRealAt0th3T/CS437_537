@@ -1,42 +1,210 @@
-from os import remove
+
+from nltk.corpus.reader.conll import ConllSRLInstanceList
 import pandas as pd
 import re, string
 import time
 import json
-from nltk import tokenize
 import math
-import customStopWordList
-import nltk
-# nltk.download('punkt')
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-from nltk.stem.porter import PorterStemmer
+from nltk import tokenize
 import numpy as np
 
+# start = time.time()
 # with open('Computed/wiki_dict.json') as json_file:
 #     wiki_dict = json.load(json_file)
-# wiki = pd.read_csv('Computed/wiki.csv')[['content','title','id','max_occur_words','max_occur_number']]
-
+# wiki = pd.read_csv('Computed/wiki_punc.csv')[['content','title','id']]
+# print(wiki)
+# end = time.time()
+# print(end - start)
 
 wiki = pd.DataFrame()
 wiki_dict = []
+CR = pd.DataFrame()
 
 def set(dataframe, dict):
     global wiki, wiki_dict
     wiki = dataframe
+    # print(dataframe)
     wiki_dict = dict
 
-def lower_case_str(string_to_be_lower_cased):
-    lowercase_str_result = str(string_to_be_lower_cased).lower()
-    return lowercase_str_result
+# Max d computation
+# def maxD(content):
+#     dict = {}
+#     for word in str(content).split(" "):
+#         #         print(word)
+#         if word in dict.keys():
+#             dict[word] += 1
+#         else:
+#             dict[word] = 1
+#     max_value = max(dict.values())
+#     #     max_keys = ""
+#     #     for k in dict.keys():
+#     #         if int(max_value) == int(dict[k]):
+#     #             max_keys += str(k) + " "
+#     #     print(max_keys)
+#     #     print(max_value)
+#     #     return max_keys
+#     return max_value
 
-def remove_punc_dot(string_has_punc):
-    no_punc_result = re.sub('[-=+–,#/\?:^$@*\"※~&%ㆍ!』\\‘|\(\)\[\]\<\>`\'》\r\n\t]', ' ', str(string_has_punc))
-    return no_punc_result
 
-def remove_punc(string_has_punc):
-    no_punc_result = re.sub('[-=+,#/\?:^$.@*\"※~&%ㆍ!』\\‘|\(\)\[\]\<\>`\'…》\r\n\t]', ' ', str(string_has_punc))
-    return no_punc_result
+# def noMultipleSpace(content):
+#     ret = content.split(" ")
+#     while ("" in ret):
+#         ret.remove("")
+#     ret2 = ""
+#     for r in ret:
+#         ret2 += r + " "
+#     #     print(ret2)
+#     return ret2
+
+
+# def noSpaceEnd(content):
+#     return content[0:(len(content) - 1)]
+
+
+# wiki['title'] = wiki['title'].apply(noMultipleSpace)
+# wiki['max_occur_words'] = wiki['max_occur_words'].apply(noSpaceEnd)
+
+# wiki['max_occur_words'] = wiki['content'].apply(maxD)
+# wiki['max_occur_number'] = wiki['content'].apply(maxD)
+# wiki
+# wiki.to_csv("wiki.csv")
+
+
+
+
+# start = time.time()
+# with open('Computed/wiki_dict.json') as json_file:
+#     wiki_dict = json.load(json_file)
+# wiki = pd.read_csv('Computed/wiki.csv')[['content','title','id','max_occur_words','max_occur_number']]
+# print(wiki)
+# end = time.time()
+# print(end - start)
+
+
+
+def minusOne(array):
+    ret = []
+    for a in array:
+        ret.append(int(a)-1)
+    return ret
+
+def getRows(qArray):
+    keys = []
+    for qWord in qArray.split(" "):
+#         print(qWord)
+        keys += minusOne(list(wiki_dict[str(qWord)].keys()))
+#     print("before: " + str(keys))
+    keys = list(dict.fromkeys(keys)) # remove duplicates
+    keys.sort()
+#     print("after: " + str(keys))
+    return keys
+
+
+# Takes a word, returns all documents as dataframe that contains the word (Wiki)
+def containsIDWiki(qArray):
+    global CR
+    keys = getRows(qArray)
+    CR = wiki.iloc[keys]
+    # print("Contains ID WIKI ")
+    # print(CR)
+    # print(CR.info())
+    return CR
+
+# CR = containsIDWiki('morocco saudi') # the user is going to enter their query in this function
+# CR # this prints info that we will potentially need.
+# print(wiki_dict['morocco'])
+
+# print(wiki_dict['morocco'].keys())
+# print(wiki_dict['saudi'].keys())
+
+# mor = wiki.iloc[minusOne(list(wiki_dict['morocco'].keys()))]
+# sau = wiki.iloc[minusOne(list(wiki_dict['saudi'].keys()))]
+# result = pd.merge(mor, sau, on=["id"])
+# result
+
+def getFreq(word,doc_id):
+#     print("word: " + word)
+#     print("doc_id: " + str(doc_id))
+    
+#     print(str(doc_id) in wiki_dict[word].keys())
+#     print(doc_id)
+#     print(wiki_dict[word].keys())
+    if str(doc_id) in wiki_dict[word].keys():
+        return wiki_dict[word][str(doc_id)]
+    else:
+        return 0
+
+def getMaxd(doc_id):
+#     print(doc_id)
+    return wiki['max_occur_number'].iloc[doc_id-1]
+
+# print(getMaxd(1))
+
+
+def getN():
+    return len(wiki)
+
+# print(getN())
+
+def getnw(word):
+    return len(list(wiki_dict[word].keys()))
+
+# print(getnw('morocco'))
+
+def getTFIDF(word, doc_id):
+    try:
+        wiki_dict[word]
+    except:
+        print("word does not exist in our system.")
+        return -1
+    
+    TF = getFreq(word, doc_id)/getMaxd(doc_id)
+    IDF = math.log2(getN()/getnw(word))
+#     print("TF: " + str(TF))
+#     print("freq: "+str(getFreq(word, doc_id)))
+#     print(getFreq(word, doc_id))
+#     print(getMaxd(doc_id))
+    return TF*IDF
+
+# word = "morocco"
+# doc_id = 1
+# print(getTFIDF(word,doc_id))
+
+def queryWordTFIDF(query):
+    global CR
+    for word in query.split(" "):
+        TIList = []
+        for key in getRows(query):
+#             print(key)
+            TIList.append(getTFIDF(word, key+1))
+        CR[word] = TIList
+        # print("**************************************************")
+        # print(TIList)
+    first = True
+    for word in query.split(" "):
+        if first:
+            CR['Total'] = CR[word]
+            first = False
+        else:
+            CR['Total'] = CR['Total'] + CR[word]
+
+def setCF(query):
+    global CR
+    CR = containsIDWiki(query)
+
+def getRelevantResources(query):
+    global CR
+    setCF(query)
+    queryWordTFIDF(query)
+    # print(CR.info())
+    # sorted = CR.sort_values(by=["Total"], ascending=False)[['content', 'title', 'id', 'Total']]
+    # return sorted.head(50)
+    return CR
+
+########################################################################### method section
+
+def getNumSentences(content):
+    return len(tokenize.sent_tokenize(content))
 
 def removeSpace(query):
     ret = query.split(" ")
@@ -52,255 +220,137 @@ def removeSpaceArray(query):
         query.remove("")
     return query
 
-def filter_tokens(str_to_be_filtered):
-    stopword_list = customStopWordList.get_custom_sw_list()
-    filtered_tokens = ""
-    for w in str(str_to_be_filtered).split(" "):
-        if w not in stopword_list:
-            filtered_tokens += w + " "
-    return filtered_tokens
-porter = PorterStemmer()
-def stem_tokens(str_to_be_stemmed):
-    stemmed_str = ""
-    for w in str(str_to_be_stemmed).split(" "):
-        stemmed_str += porter.stem(w) + " "
-    return stemmed_str
+def remove_punc_dot(string_has_punc): ## Leaves . so that we can recognize sentences
+    no_punc_result = re.sub('[-=+–,#/\?:^$@*\"※~&%ㆍ!』\\‘|\(\)\[\]\<\>`\'》\r\n\t]', '', str(string_has_punc))
+    return no_punc_result.strip()
 
-def sentenceTF(word, sentences):
-    content = []
-    wordCounts = []
-    sentenceCount = []
-    wordCount = 0
-    sentence_notprocessed = tokenize.sent_tokenize(sentences)
-    sentence = []
-    # print(word)
-    for s in sentence_notprocessed:
-        temp = remove_punc(s)
-        sentence.append(removeSpace(temp))
-    # print("sentences: ")
-    # print(sentence)
-    for s in sentence:
-        wordCount = 0
-        for w in removeSpaceArray(s.split(" ")):
-            # print("Word and w")
-            # print(w)
-            # print('Are the same? ' + str(word==w))
-            if word == w:
-                wordCount += 1
-        content.append(s)
-        wordCounts.append(wordCount)
-        sentenceCount.append(len(s.split(" ")))
-    df2 = pd.DataFrame(content, columns =['content'])
-    df2['WordCounts'] = wordCounts
-    df2['NumWords'] = sentenceCount
-    df2['TF'] = (df2['WordCounts']/df2['NumWords'])
-    # print("\n\n\nprint")
-    # print(df2)
+def remove_punc(string_has_punc):
+    no_punc_result = re.sub('[-=+–,#/\?:^$.@*\"※~&%ㆍ!』\\‘|\(\)\[\]\<\>`\'…》\r\n\t]', '', str(string_has_punc))
+    return no_punc_result.strip()
 
-    return df2
+def remove_garbage(string_has_punc): ## Leaves . so that we can recognize sentences
 
-def sentenceIDF(word, WordCounts, sentence):
-    # print("sentence:")
-    # print(sentence)
-    numSentences = getNumSentences(sentence)
-    # print("Numsentence:")
-    # print(numSentences)
-    nw = 0
-    
-    # print(sentence)
-    for WordCount in WordCounts:
-        # print(WordCount)
-        if int(WordCount) > 0:
-            nw += 1
-    
-    # print("nw : " + str(nw))
-    # print("numsentence: " + str(numSentences))
-    # print("nw == 0  is " + str(nw == 0))
-    # print("idf returns: ")
-    # print(math.log2(numSentences/nw))
-    # if word == "arabia":
-    #     print("\n\n\nIn sentenceIDF")
-    #     print("WordCounts: ")
-    #     print(WordCounts)
-    #     print("nw : " + str(nw))
-    #     print(numSentences)
-    #     print(nw)
-    #     print(math.log2(numSentences/nw))
-    if nw == 0:
-        return 0
-    elif nw == 1 & numSentences == 1:
-        return 1
-    else:
-        return math.log2(numSentences/nw) # idf
+    newline = string_has_punc.replace("\r\n\r\n", " ")
+    # print(newline)
+    no_punc_result = re.sub('[\r\n\t]', ' ', str(newline))
+    return no_punc_result.strip()
+    # return newline
 
-
-def getSentenceTFIDF(word, sentences):
-    # sentence = remove_punc(sentence)
-#     print(sentenceTF(word, sentence))
-    # if word == "arabia":
-    #     print(word)
-    #     print(sentences)
-    #     print(sentenceTF(word, sentences))
-    #     print(sentenceTF(word, sentences)['content'])
-    #     print(sentenceTF(word, sentences)['WordCounts'])
-    #     print("IDF value for " + str(word) + ", " + str(sentences))
-    #     print(sentenceIDF(word, sentenceTF(word, sentences)['WordCounts'], sentences))
-    #     print("TFIDF OF arabia")
-    #     print(sentenceTF(word, sentences)['TF'] * sentenceIDF(word, sentenceTF(word, sentences)['WordCounts'], sentences))
-    return sentenceTF(word, sentences)['TF'] * sentenceIDF(word, sentenceTF(word, sentences)['WordCounts'], sentences)
-
-# print (getSentenceTFIDF('morocco', sample))
-
-def getNumSentences(content):
-    return len(tokenize.sent_tokenize(content))
-def getSentences(content):
-    return tokenize.sent_tokenize(content)
-query = ""
-
-def setQuery(q):
-    global query
-    query = q
-    
-def getAllWords(dataframe, doc_id):
+def getAllWords(string):
     dict = {}
-    global query
-    for q in query.split(" "):
-        dict[q] = 0
-    processed_list = remove_punc(dataframe['content'].iloc[doc_id]).split(" ")
+    processed_list = remove_punc(string).split(" ")
     for word in processed_list:
         dict[word] = 0
 #     print(list(dict.keys()))
     return removeSpaceArray(list(dict.keys()))
 
-def TFIDFAllWords(dataframe, words, doc_id): 
-    # print("Here are list of words")
-    # print(words)
-#     print(len(words))
-    TFDocuments = pd.DataFrame()
-#     print(dataframe['content'].iloc[0])
+def getSentences(content):
+    return tokenize.sent_tokenize(content)
+
+def TFIDFSentenceWords(wordList, sentence, IDF1, sentences):
+    TFIDFdict = {}
+    sList = sentence.split(" ")
+    for w in wordList:
+        IDF2 = getAppear(w, sentences)
+        TF1 = sList.count(w)
+        TF2 = len(sList)
+        TFIDFdict[w] = (((TF1/TF2)*(1-0.01))+0.01)*np.log((IDF1/(IDF2+1))+1)
+    # print(df)
+    return TFIDFdict
+
+def getAppear(query, sentences):
     count = 0
-    first = True
-    for word in words:
-        if first:
-            sentenceID = []
-#             print("Mark")
-#             print(dataframe['content'].iloc[count])
-#             print(getSentenceTFIDF(word, dataframe['content'].iloc[count]))
-            # print("NumSentences: " +str(getNumSentences(dataframe['content'].iloc[doc_id])))
-            # print(words)
-            # print(dataframe['content'].iloc[doc_id])
-            for i in range(getNumSentences(dataframe['content'].iloc[doc_id])):
-                sentenceID.append(i)
-            TFDocuments = pd.DataFrame(sentenceID, columns=['Sentence_ID'])
-            first = False
-        # print(word)
-        # print("Content: "+str(dataframe['content'].iloc[doc_id]))
-        TFDocuments[word] = getSentenceTFIDF(word, dataframe['content'].iloc[doc_id])
-        # print("\n\n\nTFDOCUMENTS")
-        # print(TFDocuments[word])
-#         print("Count: " + str(count))
-#         count += 1
-    return TFDocuments
+    for q in query.split(" "):
+        for s in sentences:
+            if s.split(" ").count(q) != 0:
+                count += 1
+                continue
+    return count
 
-def secondHalf(dataframe, doc_id):
-    words = getAllWords(dataframe, doc_id)
-#     words = 
-#     print(words)
-    NeedsSum = TFIDFAllWords(dataframe, words, doc_id)
-#     print(NeedsSum)
-    retVals = []
-    for sentenceID in range(len(NeedsSum)):
-        retVal = 0
-        for word in words:
-            # print("please")
-            # print(NeedsSum[word])
-            # if word == "arabia":
-            #     print("Arabia")
-            #     print(NeedsSum[word])
-            #     print(NeedsSum)
-            retVal += float(NeedsSum[word].iloc[sentenceID])**2
-        retVals.append(math.sqrt(retVal))
-    # print("retVals: ")
-    # print(retVals)
-    return retVals
+def queryWordInWords(query, wordList):
+    retList = []
+    for q in query.split(" "):
+        if q in wordList:
+            retList.append(q)
+    return retList
 
-# AllWordsTest = wiki.iloc[0:10]
-# print(AllWordsTest['content'].iloc[0])
-# print(secondHalf(AllWordsTest, 0))
+# doc is the entire document as a string
+def getCosine(query, doc):
+    cosineList = []
+    docNoPunc = remove_punc(doc)
+#         print(wordList)
+    numSentences = getNumSentences(doc)
+    sentences = getSentences(doc)
+    largest = 0
+    second_largest = 0
+    
+    for sentence in sentences:
+        wordList = getAllWords(sentence) # All the words in the current document
+        queryWordsinSentence = queryWordInWords(query, wordList) # query words that are in the sentence words
+        TFIDFWords = TFIDFSentenceWords(wordList, doc, numSentences, sentences)
+        # print("*****************************************")
+        # print(TFIDFWords)
+        # print("*****************************************")
+        ### Top
+        top = 0
+        for w in queryWordsinSentence:
+            # print("*****************************************")
+            # print(w)
+            # print("*****************************************")
+            top += TFIDFWords[w]
+        ### Bottom Left
+        bLeft = np.sqrt(len(query.split(" ")))
+        ### Bottom Right
+        bRight = 0
+        for w in wordList:
+            bRight += TFIDFWords[w]**2
+        bRight = np.sqrt(bRight)
+        cosineList.append((top)/(bLeft*bRight))
+    # print("*****************************************")
+    # print(cosineList)
+    # print("*****************************************")
+    largest = cosineList.index(max(cosineList))  #  biggest float
+    cosineList.remove(max(cosineList))
+    try:
+        second_largest = cosineList.index(max(cosineList))  # second biggest float
+        return largest,second_largest
+    except:
+        return largest,-1
 
-def firstHalf(query):
-    firsthalf = math.sqrt(len(query.split(" "))*1)
-    return float(firsthalf)
+def titleRemoval(string, title):
+    return string.replace(title,"").strip()
 
-# query = "morroco saudi"
-# firstHalf(query)
-
-def cosineSimilarity(query, dataframe):
+def getSnippets(query):
+    global CR
+    getRelevantResources(query)
+    # print(CR)
+    sorted = CR.sort_values(by=["Total"], ascending=False)[['content','content_original','title', 'id', 'Total']].head(50)
+    # print(sorted)
     firstSentence = []
     secondSentence = []
-    setQuery(query)
-    for doc_id in range(len(dataframe)): # looks at each document
-        # print("document_id: ")
-        # print(doc_id)
-        currentDoc = dataframe.iloc[doc_id]
-        wordList = getAllWords(dataframe, doc_id) # All the words in the current document
-#         print(wordList)
-        TFIDFWords = TFIDFAllWords(dataframe, wordList, doc_id)
-#         print(TFIDFWords)
-        numSentences = getNumSentences(dataframe['content'].iloc[doc_id])
-        sentences = getSentences(dataframe['content'].iloc[doc_id])
-#         print(sentences)
+    for i in range(len(sorted)):
+        # print(sorted['content'].iloc[i])
+        s1,s2 = getCosine(query, str(sorted['content'].iloc[i]))
         
-        
-        top = []
-        for i in range(numSentences):
-            top.append(0)
-        
-        for sentenceID in range(numSentences):
-            for word in removeSpaceArray(query.split(" ")):
-#                 print("Length: " +str(len(top)))
-#                 print("SentenceID: "+ str(sentenceID))
-#                 print("word: " + str(word))
-#                 print("TFIDF of sentence number: " + str(sentenceID) +" for word: " + str(word) +":"+ str(TFIDFWords[word].iloc[sentenceID]))
-#                 print("NumSentences: "+str(numSentences))
-
-                top[sentenceID] += float(TFIDFWords[word].iloc[sentenceID]) # TFIDF value of word, sentenceID
-                
-        # Top part is stored as an array of Total TFIDF values(words in query) by sentences
-#         print(top)
-        firstBottom = firstHalf(query) # This value does not change upon sentences so it will be static
-        secondBottom = secondHalf(dataframe, doc_id) # returns an array of every unique words' sqrt(sum(TFIDF(word)^2))
-        
-        sentenceNum = []
-        cosineRank = []
-#         print("NumSentences: "+str(numSentences))
-        for i in range(numSentences):
-            sentenceNum.append(i)
-            # print("firstBottom: " + str(firstBottom))
-            # print("secondBottom: " + str(secondBottom[i]))
-
-            cosineRank.append(top[i]/(firstBottom*secondBottom[i]))
-        
-        rank = pd.DataFrame(sentenceNum,columns=['sentence#'])
-        rank['cosine'] = cosineRank
-        sorted = rank.sort_values(by=["cosine"], ascending=False)
-#         print(sorted)
-#         print(sorted['sentence#'].iloc[0])
-        if numSentences < 2:
-            firstSentence.append(int(sorted['sentence#'].iloc[0]))
-            secondSentence.append(-1)
+        sentences = getSentences(str(sorted['content_original'].iloc[i]))
+        titleR = False
+        if titleR:
+            if s2 == -1:
+                firstSentence.append(titleRemoval(remove_garbage(sentences[s1]),str(sorted['title'].iloc[i])))
+                secondSentence.append("")
+            else:
+                firstSentence.append(titleRemoval(remove_garbage(sentences[s1]),str(sorted['title'].iloc[i])))
+                secondSentence.append(titleRemoval(remove_garbage(sentences[s2]),str(sorted['title'].iloc[i])))
         else:
-            firstSentence.append(int(sorted['sentence#'].iloc[0]))
-            secondSentence.append(int(sorted['sentence#'].iloc[1]))
-    dataframe['firstSentenceID'] = firstSentence
-    dataframe['secondSentenceID'] = secondSentence
-    return dataframe
-
-def getSnippets(query, CRR):
-    # print(CRR)
-    CosineFinal = cosineSimilarity(query, CRR)
+            if s2 == -1:
+                firstSentence.append(remove_garbage(sentences[s1]))
+                secondSentence.append("")
+            else:
+                firstSentence.append(remove_garbage(sentences[s1]))
+                secondSentence.append(remove_garbage(sentences[s2]))
+        
+    sorted["first"] = firstSentence
+    sorted["second"] = secondSentence
     
-    return CosineFinal
-
-# ms = pd.read_csv("morocco_saudi.csv")
-# getSnippets("morocco saudi", ms)
+    # print(sorted[['title','first','second']])
+    return sorted[['title','first','second']]

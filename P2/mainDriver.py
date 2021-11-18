@@ -142,33 +142,15 @@ def main():
             print("--------------------------------------------------------------------------------------------------")
             print("Generating Snippets for: \"" + TrueInput + "\"")
             # print(Uinput)
-            result = SNP.getSnippets(Uinput, CRR.getRelevantResources(Uinput))
-            # print(result)
-            
-            firstSentence = []
-            secondSentence = []
-            sentences = []
-            # print(wiki_original['content'].iloc[result['id']].tolist())
-            for s in wiki['content_original'].iloc[minusOne(result['id'])].tolist():
-                sentences.append(SNP.getSentences(s))
-            for i in range(len(result)):
-                # print(sentences[i])
-                # print([result['firstSentenceID'].iloc[i]])
-                firstSentence.append(sentences[i][result['firstSentenceID'].iloc[i]])
-                if result['secondSentenceID'].iloc[i] != -1:
-                    secondSentence.append(str(sentences[i][result['secondSentenceID'].iloc[i]]))
-                else:
-                    secondSentence.append("")
-            # Show = pd.DataFrame(result['title'].tolist(),columns=['title'])
-            # Show['snippet'] = firstSentence
-            # print(Show)
-            titles = result['title'].tolist()
-            for i in range(len(titles)):
+            # SNP.getRelevantResources(Uinput)
+            df = SNP.getSnippets(Uinput)
+            # print(df["second"])
+            for i in range(len(df)):
                 print("--------------------------------------------------------------------------------------------------")
-                print("\t"+str(titles[i]) + "\n")
-                print(firstSentence[i])
-                print("\n")
-                print(secondSentence[i])
+                print("(title)\t\t"+str(df["title"].iloc[i]) + "\n")
+                print("(1)\t",df["first"].iloc[i])
+                # print("\n")
+                print("(2)\t",df["second"].iloc[i])
             print("--------------------------------------------------------------------------------------------------")
 
             print("\n")
@@ -181,10 +163,10 @@ def main():
             print("Invalid option selected please try again.")
 
 print('Booting the program ...')
-# readAll()
+readAll()
 # readwiki()
-readql()
-readSample()
+# readql()
+# readSample()
 main()
 
 

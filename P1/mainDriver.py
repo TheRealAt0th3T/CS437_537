@@ -138,8 +138,11 @@ def main():
             for s in wiki_original['content'].iloc[minusOne(result['id'])].tolist():
                 sentences.append(SNP.getSentences(s))
             for i in range(len(result)):
-                # print(sentences[i])
-                # print([result['firstSentenceID'].iloc[i]])
+                print("****************************************************8")
+                print(sentences[i])
+                print(result['firstSentenceID'].iloc[i])
+                print(len(sentences))
+                
                 firstSentence.append(sentences[i][result['firstSentenceID'].iloc[i]])
                 if result['secondSentenceID'].iloc[i] != -1:
                     secondSentence.append(str(sentences[i][result['secondSentenceID'].iloc[i]]))
@@ -167,8 +170,8 @@ def main():
             print("Invalid option selected please try again.")
 
 print('Booting the program ...')
-readAll()
-# readwiki()
+# readAll()
+readwiki()
 # readql()
 main()
 
