@@ -245,7 +245,10 @@ def getAllWords(string):
     return removeSpaceArray(list(dict.keys()))
 
 def getSentences(content):
-    return tokenize.sent_tokenize(content)
+    retList = []
+    for s in tokenize.sent_tokenize(content):
+        retList.append(re.sub('[.?!]', ' ', str(s)).strip())
+    return retList
 
 def TFIDFSentenceWords(wordList, sentence, IDF1, sentences):
     TFIDFdict = {}
@@ -298,6 +301,19 @@ def getCosine(query, doc):
             # print(w)
             # print("*****************************************")
             top += TFIDFWords[w]
+            
+            # print(sentence)
+                # print(TFIDFWords.keys())
+        # if top == 0:
+        #     print("*****************************************")
+        #     print("top: ",top)
+        #     print("query: ",query)
+        #     print("sentence: ",sentence)
+        #     print("queryWords: ",queryWordsinSentence)
+        #     for w in queryWordsinSentence:
+        #         print(w)
+        #         print(TFIDFWords[w])
+        #     print("*****************************************")
         ### Bottom Left
         bLeft = np.sqrt(len(query.split(" ")))
         ### Bottom Right
@@ -309,10 +325,63 @@ def getCosine(query, doc):
     # print("*****************************************")
     # print(cosineList)
     # print("*****************************************")
+    if str(len(cosineList)) == "1":
+        return 0, -1
+    if str(len(cosineList)) == "2":
+        # print("returned due to array size of 2")
+        return 0, 1
+    
     largest = cosineList.index(max(cosineList))  #  biggest float
-    cosineList.remove(max(cosineList))
+    # if max(cosineList) == 0:
+    #     print("*****************************************")
+    #     print(sentences)
+    #     print(query)
+    #     print(cosineList)
+    #     print("*****************************************")
+    
+    cosineList2 = cosineList[:]
+    cosineList2.pop(largest)
+    # print("*****************************************")
+    # print("cosineLength: ",len(cosineList))
+    # print(str(len(cosineList)) == "1")
+    # print(len(cosineList) == 1)
+    # print(str(len(cosineList)) == "2")
+    # print(len(cosineList) == 2)
+    # print(cosineList)
+    # print(cosineList2)
+    # print("*****************************************")
+    onlyZero = True
+    for c in cosineList2:
+        if c != 0:
+            onlyZero = False
+    # print(cosineList2)
+    # print(onlyZero)
+    if onlyZero:
+        rNum = np.random.randint(len(cosineList), size=1)[0]
+        while rNum == largest:
+            rNum = np.random.randint(len(cosineList), size=1)[0]
+        # print("*****************************************")
+        # print("Largest: ",largest)
+        # print("rNum: ",rNum)
+        # print("*****************************************")
+        return largest, rNum
+
     try:
-        second_largest = cosineList.index(max(cosineList))  # second biggest float
+        # s_large_float = max(cosineList)
+        second_largest = cosineList.index(max(cosineList2))  # second biggest float
+        
+        # if largest == second_largest:
+            # print("Largest and second Largest is the same")
+            # print("*****************************************")
+            # print("cosineLength: ",len(cosineList))
+            # # print("doc: ",doc)
+            # print("largest: ", largest)
+            # print(max(cosineList))
+            # print("second_largest: ", second_largest)
+            # print(max(cosineList2))
+            # print("cosineList: ", cosineList)
+            # print("*****************************************")
+        
         return largest,second_largest
     except:
         return largest,-1
@@ -320,8 +389,9 @@ def getCosine(query, doc):
 def titleRemoval(string, title):
     return string.replace(title,"").strip()
 
-def getSnippets(query):
+def getSnippets(queryN):
     global CR
+    query = queryN
     getRelevantResources(query)
     # print(CR)
     sorted = CR.sort_values(by=["Total"], ascending=False)[['content','content_original','title', 'id', 'Total']].head(50)

@@ -16,6 +16,9 @@ warnings.simplefilter("ignore")
 import textProcessor as TP
 import querySuggestion as QS
 import candidateResources_Ranking as CRR
+import nltk
+# nltk.download('wordnet')
+# nltk.download('averaged_perceptron_tagger')
 import snippets as SNP
 
 # This is our main "method" block that
@@ -80,10 +83,10 @@ def cleanQuery(query):
     cleaned = TP.lower_case_str(query)
     cleaned = TP.remove_punc(cleaned)
     cleaned = TP.removeSpace(cleaned)
-    # cleaned = TP.filter_tokens(cleaned)
+    cleaned = TP.filter_tokens(cleaned)
     # Ex) if user types "one", it gets filtered.
+    cleaned = TP.lemmatize_tokens(cleaned)
     cleaned = TP.stem_tokens(cleaned)
-    cleaned = cleaned.strip()
 
     return cleaned
 
@@ -99,7 +102,6 @@ def main():
     QS.set(ql, ql_dict)
     CRR.set(wiki, wiki_dict)
     SNP.set(wiki, wiki_dict)
-
     
     # The message will print asking the user
     # to enter their query to be searched
@@ -114,57 +116,59 @@ def main():
     while(s != 4):
         print("Please select a task using numbers [1,2,3,4]:")
         print("\t1) Suggested Queries \n\t2) Candidate Resources/Relevance Ranking \n\t3) Generate Snippets \n\t4) Exit")
-        s = int(input())
-        if s != 4:
-            print("Please type your Query:")
-            TrueInput = input()
-            Uinput = cleanQuery(TrueInput)
+        try:
+            s = int(input())
+            if s != 4:
+                print("Please type your Query:")
+                TrueInput = input()
+                Uinput = cleanQuery(TrueInput)
 
-        if s == 1:
-            print("--------------------------------------------------------------------------------------------------")
-            print("Suggested Queries for: \"" + TrueInput + "\"")
-            result = QS.filterScores(Uinput)
-            for q in result['Query_original'].iloc[0:9].tolist():
-                print("\t" + str(q))
-            print("--------------------------------------------------------------------------------------------------")
-            # function call
-        elif s == 2:
-            print("--------------------------------------------------------------------------------------------------")
-            print("Calculating Candidate Resources/Relevance Ranking for: \"" + TrueInput + "\"")
-            result = CRR.getRelevantResources(Uinput).sort_values(by=["Total"], ascending=False)[['content_original', 'title', 'id', 'Total']]
-            print(result[['title','Total']].head(50))
-            print("--------------------------------------------------------------------------------------------------")
-            print("\n")
-            print("Dataframe")
-            print(result)
-            # function call
-        elif s == 3:
-            print("--------------------------------------------------------------------------------------------------")
-            print("Generating Snippets for: \"" + TrueInput + "\"")
-            # print(Uinput)
-            # SNP.getRelevantResources(Uinput)
-            df = SNP.getSnippets(Uinput)
-            # print(df["second"])
-            for i in range(len(df)):
+            if s == 1:
                 print("--------------------------------------------------------------------------------------------------")
-                print("(title)\t\t"+str(df["title"].iloc[i]) + "\n")
-                print("(1)\t",df["first"].iloc[i])
-                # print("\n")
-                print("(2)\t",df["second"].iloc[i])
-            print("--------------------------------------------------------------------------------------------------")
+                print("Suggested Queries for: \"" + TrueInput + "\"")
+                result = QS.filterScores(Uinput)
+                for q in result['Query_original'].iloc[0:9].tolist():
+                    print("\t" + str(q))
+                print("--------------------------------------------------------------------------------------------------")
+                # function call
+            elif s == 2:
+                print("--------------------------------------------------------------------------------------------------")
+                print("Calculating Candidate Resources/Relevance Ranking for: \"" + TrueInput + "\"")
+                result = CRR.getRelevantResources(Uinput).sort_values(by=["Total"], ascending=False)[['content_original', 'title', 'id', 'Total']]
+                print(result[['title','Total']].head(50))
+                print("--------------------------------------------------------------------------------------------------")
+                print("\n")
+                print("Dataframe")
+                print(result)
+                # function call
+            elif s == 3:
+                print("--------------------------------------------------------------------------------------------------")
+                print("Generating Snippets for: \"" + TrueInput + "\"")
+                # print(Uinput)
+                # SNP.getRelevantResources(Uinput)
+                df = SNP.getSnippets(Uinput)
+                # print(df["second"])
+                for i in range(len(df)):
+                    print("--------------------------------------------------------------------------------------------------")
+                    print("(title)\t\t"+str(df["title"].iloc[i]) + "\n")
+                    print("(1)\t",df["first"].iloc[i])
+                    # print("\n")
+                    print("(2)\t",df["second"].iloc[i])
+                print("--------------------------------------------------------------------------------------------------")
 
-            print("\n")
-            # function call
-        elif s == 4:
-            print("Okay, Bye...")
-            file = "Okay_bye.mp3"
-            os.system("afplay " + file)
-        else:
+                print("\n")
+                # function call
+            elif s == 4:
+                print("Okay, Bye...")
+                file = "Okay_bye.mp3"
+                os.system("afplay " + file)
+        except Exception as e: 
+            print(e)
             print("Invalid option selected please try again.")
 
 print('Booting the program ...')
-readAll()
-# readwiki()
+# readAll()
+readwiki()
 # readql()
 # readSample()
 main()
