@@ -153,7 +153,8 @@ def main():
                     print("(title)\t\t"+str(df["title"].iloc[i]) + "\n")
                     print("(1)\t",df["first"].iloc[i])
                     # print("\n")
-                    print("(2)\t",df["second"].iloc[i])
+                    if df["second"].iloc[i] != "":
+                        print("(2)\t",df["second"].iloc[i])
                 print("--------------------------------------------------------------------------------------------------")
 
                 print("\n")
@@ -162,13 +163,13 @@ def main():
                 print("Okay, Bye...")
                 file = "Okay_bye.mp3"
                 os.system("afplay " + file)
-        except Exception as e: 
+        except Exception as e:
             print(e)
-            print("Invalid option selected please try again.")
+            # print("Invalid option selected please try again.")
 
 print('Booting the program ...')
-# readAll()
-readwiki()
+readAll()
+# readwiki()
 # readql()
 # readSample()
 main()

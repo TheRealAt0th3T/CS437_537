@@ -229,8 +229,8 @@ def remove_punc(string_has_punc):
     return no_punc_result.strip()
 
 def remove_garbage(string_has_punc): ## Leaves . so that we can recognize sentences
-
     newline = string_has_punc.replace("\r\n\r\n", " ")
+    newline = newline.replace(" , ", ". ")
     # print(newline)
     no_punc_result = re.sub('[\r\n\t]', ' ', str(newline))
     return no_punc_result.strip()
@@ -370,6 +370,8 @@ def getCosine(query, doc):
         # s_large_float = max(cosineList)
         second_largest = cosineList.index(max(cosineList2))  # second biggest float
         
+        # print(cosineList[second_largest])
+        # print("cosineList: ",len(cosineList))
         # if largest == second_largest:
             # print("Largest and second Largest is the same")
             # print("*****************************************")
@@ -402,7 +404,7 @@ def getSnippets(queryN):
         # print(sorted['content'].iloc[i])
         s1,s2 = getCosine(query, str(sorted['content'].iloc[i]))
         
-        sentences = getSentences(str(sorted['content_original'].iloc[i]))
+        sentences = getSentences(remove_garbage(str(sorted['content_original'].iloc[i])))
         titleR = False
         if titleR:
             if s2 == -1:
@@ -416,11 +418,36 @@ def getSnippets(queryN):
                 firstSentence.append(remove_garbage(sentences[s1]))
                 secondSentence.append("")
             else:
+                # print(sentences)
+                # print("Sentences: ",len(sentences))
+                # print(len(getSentences(remove_garbage(str(sorted['content_original'].iloc[i])))))
+                # print(len(getSentences(str(sorted['content'].iloc[i]))))
+                # for s in getSentences(remove_garbage(str(sorted['content_original'].iloc[i]))):
+                #     print(s)
+                # for s in getSentences(str(sorted['content'].iloc[i])):
+                #     print(s)
+                # print(getSentences(str(sorted['content'].iloc[i])))
+                # print(s2)
                 firstSentence.append(remove_garbage(sentences[s1]))
-                secondSentence.append(remove_garbage(sentences[s2]))
+                try:
+                    secondSentence.append(remove_garbage(sentences[s2]))
+                except:
+                    secondSentence.append(remove_garbage(sentences[s2-1]))
         
     sorted["first"] = firstSentence
     sorted["second"] = secondSentence
     
     # print(sorted[['title','first','second']])
     return sorted[['title','first','second']]
+
+# start = time.time()
+# with open('Computed/wiki_dict.json') as json_file:
+#     wiki_dict = json.load(json_file)
+# print("wiki_dict loaded")
+# wiki = pd.read_csv('Computed/wiki_ultimate.csv')[['content','content_original','title','id','max_occur_words','max_occur_number']]
+# print("wiki loaded")
+# end = time.time()
+# print("Initialization complete. Time Elapsed: "+str(end - start)[0:4] + "s")
+
+# df = getSnippets("disney")
+# print(df)

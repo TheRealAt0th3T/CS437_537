@@ -184,11 +184,19 @@ def setCF(query):
     # print(query,"query")
     CR = containsIDWiki(query)
 
+def remove_garbage(string_has_punc): ## Leaves . so that we can recognize sentences
+    newline = string_has_punc.replace("\r\n\r\n", " ")
+    newline = newline.replace(" , ", ". ")
+    # print(newline)
+    no_punc_result = re.sub('[\r\n\t]', ' ', str(newline))
+    return no_punc_result.strip()
+
 def getRelevantResources(query):
     global CR
     setCF(query)
     queryWordTFIDF(query)
     # sorted = CR.sort_values(by=["Total"], ascending=False)[['content_original', 'title', 'id', 'Total']]
     # return sorted.head(50)
+    CR['content_original'] = CR['content_original'].apply(remove_garbage)
     return CR
 
